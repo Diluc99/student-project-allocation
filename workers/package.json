@@ -1,0 +1,9 @@
+{
+  "name": "student-project-allocation-workers",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Development job workers for the Camunda 8 Student Project Approval and Allocation BPMN",
+  "main": "index.js",
+  "scripts": { "start": "node index.js" },
+  "dependencies": { "zeebe-node": "^8.3.0" }
+}

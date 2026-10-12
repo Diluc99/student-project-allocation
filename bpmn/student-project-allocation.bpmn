@@ -1,0 +1,1683 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:zeebe="http://camunda.org/schema/zeebe/1.0" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_ProjectAllocation" name="Student Project Approval and Allocation" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.50.1" modeler:executionPlatform="Camunda Cloud" modeler:executionPlatformVersion="8.7.0">
+  <bpmn:collaboration id="Collaboration_Project">
+    <bpmn:participant id="Participant_Programme" name="Final-Year Project Programme" processRef="student_project_allocation" />
+  </bpmn:collaboration>
+  <bpmn:process id="student_project_allocation" name="Student Project Approval and Allocation" isExecutable="true">
+    <bpmn:laneSet id="LaneSet_1">
+      <bpmn:lane id="Lane_S" name="Student / Team">
+        <bpmn:flowNodeRef>Start_Submit</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Submit</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Boundary_Deadline</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Revise</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Boundary_ReviseTimer</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_LapsedRevise</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_M" name="Project Management System">
+        <bpmn:flowNodeRef>Task_FlagLate</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gw_Late</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Catch_LateTimer</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Catch_LateMsg</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_NotifyLapse</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_Lapsed</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Validate</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gw_Team</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_NotifyInvalid</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_InvalidTeam</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gw_Form</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ReturnErrors</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Similarity</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gw_Sim</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Reminder</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_Reminder</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_SendRevision</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_NotifyReject</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gw_NewTopic</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_Rejected</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Sub_Allocation</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Boundary_NoGuide</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gw_After</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Prep</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_OK</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_Withdrawn</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_NotifyNoGuide</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_NoGuide</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_C" name="Project Coordinator">
+        <bpmn:flowNodeRef>Task_LateDecide</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gw_LateDec</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_LateDenied</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_CoordResolve</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gw_Resolved</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_Unresolved</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Screen</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_SimReview</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gw_SimDec</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_R" name="Review Committee (incl. HoD)">
+        <bpmn:flowNodeRef>Gw_JoinReview</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Review</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Boundary_Reminder</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Boundary_Escalate</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Throw_Escalate</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_HoD</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gw_JoinDecision</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gw_Decision</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gw_Limit</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_G" name="Faculty Guide" />
+    </bpmn:laneSet>
+    <bpmn:startEvent id="Start_Submit" name="Team decides to submit proposal">
+      <bpmn:documentation>Happy path start. Initialises loop counters and thresholds used by the failure paths.</bpmn:documentation>
+      <bpmn:extensionElements>
+        <zeebe:ioMapping>
+          <zeebe:output source="=0" target="validationAttempts" />
+          <zeebe:output source="=0" target="revisionCycles" />
+          <zeebe:output source="=1" target="newTopicAllowance" />
+          <zeebe:output source="=0" target="guideAttempts" />
+          <zeebe:output source="=[]" target="excludedGuides" />
+          <zeebe:output source="=&#34;none&#34;" target="withdrawalBy" />
+          <zeebe:output source="=0.4" target="similarityThreshold" />
+        </zeebe:ioMapping>
+      </bpmn:extensionElements>
+      <bpmn:outgoing>F_01</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="Task_Submit" name="Submit project proposal">
+      <bpmn:documentation>Happy path. Human task: the team fills in the proposal form.</bpmn:documentation>
+      <bpmn:extensionElements>
+        <zeebe:userTask />
+        <zeebe:assignmentDefinition candidateGroups="students" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>F_01</bpmn:incoming>
+      <bpmn:incoming>F_11</bpmn:incoming>
+      <bpmn:outgoing>F_02</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:boundaryEvent id="Boundary_Deadline" name="Deadline passed" attachedToRef="Task_Submit">
+      <bpmn:documentation>F4 - Proposal deadline. Interrupting timer on the submission task.</bpmn:documentation>
+      <bpmn:outgoing>F_03</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="Timer_Boundary_Deadline">
+        <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">P14D</bpmn:timeDuration>
+      </bpmn:timerEventDefinition>
+    </bpmn:boundaryEvent>
+    <bpmn:userTask id="Task_Revise" name="Revise &#38; resubmit (or new topic)">
+      <bpmn:documentation>Shared rework task used by F1 (validation errors), F3 (modify topic), F5 (committee revision) and F6 (one new topic).</bpmn:documentation>
+      <bpmn:extensionElements>
+        <zeebe:userTask />
+        <zeebe:assignmentDefinition candidateGroups="students" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>F_22</bpmn:incoming>
+      <bpmn:incoming>F_31</bpmn:incoming>
+      <bpmn:incoming>F_47</bpmn:incoming>
+      <bpmn:incoming>F_49</bpmn:incoming>
+      <bpmn:outgoing>F_14</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:boundaryEvent id="Boundary_ReviseTimer" name="7 days" attachedToRef="Task_Revise">
+      <bpmn:documentation>F12 - Team does not rework within 7 days. Interrupting timer, case lapses.</bpmn:documentation>
+      <bpmn:outgoing>F_13</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="Timer_Boundary_ReviseTimer">
+        <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">P7D</bpmn:timeDuration>
+      </bpmn:timerEventDefinition>
+    </bpmn:boundaryEvent>
+    <bpmn:endEvent id="End_LapsedRevise" name="Closed: revision lapsed">
+      <bpmn:incoming>F_13</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sendTask id="Task_FlagLate" name="Flag team &#38; notify deadline missed">
+      <bpmn:documentation>F4 - Notify the team that the deadline was missed and that a late-submission request is possible.</bpmn:documentation>
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="send-notification" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>F_03</bpmn:incoming>
+      <bpmn:outgoing>F_04</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:eventBasedGateway id="Gw_Late" name="Late request?">
+      <bpmn:documentation>F4 - Event-based gateway: late-submission request message OR 3-day timer, whichever comes first.</bpmn:documentation>
+      <bpmn:incoming>F_04</bpmn:incoming>
+      <bpmn:outgoing>F_05</bpmn:outgoing>
+      <bpmn:outgoing>F_06</bpmn:outgoing>
+    </bpmn:eventBasedGateway>
+    <bpmn:intermediateCatchEvent id="Catch_LateTimer" name="3 days, no request">
+      <bpmn:incoming>F_05</bpmn:incoming>
+      <bpmn:outgoing>F_07</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="Timer_Catch_LateTimer">
+        <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">P3D</bpmn:timeDuration>
+      </bpmn:timerEventDefinition>
+    </bpmn:intermediateCatchEvent>
+    <bpmn:intermediateCatchEvent id="Catch_LateMsg" name="Late request received">
+      <bpmn:incoming>F_06</bpmn:incoming>
+      <bpmn:outgoing>F_09</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="MsgDef_Catch_LateMsg" messageRef="Message_late" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:sendTask id="Task_NotifyLapse" name="Notify team: proposal lapsed">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="send-notification" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>F_07</bpmn:incoming>
+      <bpmn:outgoing>F_08</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:endEvent id="End_Lapsed" name="Closed: lapsed (no submission)">
+      <bpmn:incoming>F_08</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:serviceTask id="Task_Validate" name="Validate form &#38; team rules">
+      <bpmn:documentation>Happy path. Checks completeness, roll numbers, team size and double membership. Sets formValid, teamValid, errorList.</bpmn:documentation>
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="validate-proposal" />
+        <zeebe:ioMapping>
+          <zeebe:output source="=validationAttempts + 1" target="validationAttempts" />
+        </zeebe:ioMapping>
+      </bpmn:extensionElements>
+      <bpmn:incoming>F_02</bpmn:incoming>
+      <bpmn:incoming>F_14</bpmn:incoming>
+      <bpmn:outgoing>F_15</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="Gw_Team" name="Team rules OK?" default="F_16">
+      <bpmn:documentation>F2 - Team size / duplicate membership.</bpmn:documentation>
+      <bpmn:incoming>F_15</bpmn:incoming>
+      <bpmn:outgoing>F_16</bpmn:outgoing>
+      <bpmn:outgoing>F_17</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sendTask id="Task_NotifyInvalid" name="Notify team: invalid team">
+      <bpmn:documentation>F2 - Reject at validation; the team is reformed and files a new proposal.</bpmn:documentation>
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="send-notification" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>F_17</bpmn:incoming>
+      <bpmn:outgoing>F_18</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:endEvent id="End_InvalidTeam" name="Closed: invalid team">
+      <bpmn:incoming>F_18</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:exclusiveGateway id="Gw_Form" name="Form complete?" default="F_21">
+      <bpmn:documentation>F1 - Form validation outcome with a loop limit of 2 resubmissions.</bpmn:documentation>
+      <bpmn:incoming>F_16</bpmn:incoming>
+      <bpmn:outgoing>F_19</bpmn:outgoing>
+      <bpmn:outgoing>F_20</bpmn:outgoing>
+      <bpmn:outgoing>F_21</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sendTask id="Task_ReturnErrors" name="Return proposal with error list">
+      <bpmn:documentation>F1 - Return to team with the error list.</bpmn:documentation>
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="send-notification" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>F_19</bpmn:incoming>
+      <bpmn:outgoing>F_22</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:serviceTask id="Task_Similarity" name="Run similarity / duplicate check">
+      <bpmn:documentation>Happy path. Compares topic/abstract with earlier projects, sets similarityScore.</bpmn:documentation>
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="similarity-check" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>F_26</bpmn:incoming>
+      <bpmn:outgoing>F_27</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="Gw_Sim" name="Similarity above threshold?" default="F_29">
+      <bpmn:documentation>F3 - Duplicate / plagiarised topic.</bpmn:documentation>
+      <bpmn:incoming>F_27</bpmn:incoming>
+      <bpmn:outgoing>F_28</bpmn:outgoing>
+      <bpmn:outgoing>F_29</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sendTask id="Task_Reminder" name="Send reminder to committee">
+      <bpmn:documentation>F7 - Non-interrupting reminder after 5 days.</bpmn:documentation>
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="send-notification" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>F_35</bpmn:incoming>
+      <bpmn:outgoing>F_36</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:endEvent id="End_Reminder" name="Reminder sent">
+      <bpmn:incoming>F_36</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sendTask id="Task_SendRevision" name="Send revision feedback to team">
+      <bpmn:documentation>F5 - Counts the revision cycle and resets the validation counter.</bpmn:documentation>
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="send-notification" />
+        <zeebe:ioMapping>
+          <zeebe:output source="=revisionCycles + 1" target="revisionCycles" />
+          <zeebe:output source="=0" target="validationAttempts" />
+        </zeebe:ioMapping>
+      </bpmn:extensionElements>
+      <bpmn:incoming>F_45</bpmn:incoming>
+      <bpmn:outgoing>F_47</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:sendTask id="Task_NotifyReject" name="Notify team: rejected, with reasons">
+      <bpmn:documentation>F3/F6 - Sends the reasons and consumes the single new-topic allowance.</bpmn:documentation>
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="send-notification" />
+        <zeebe:ioMapping>
+          <zeebe:output source="=newTopicAllowance - 1" target="newTopicAllowance" />
+          <zeebe:output source="=0" target="validationAttempts" />
+          <zeebe:output source="=0" target="revisionCycles" />
+        </zeebe:ioMapping>
+      </bpmn:extensionElements>
+      <bpmn:incoming>F_32</bpmn:incoming>
+      <bpmn:incoming>F_43</bpmn:incoming>
+      <bpmn:outgoing>F_48</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:exclusiveGateway id="Gw_NewTopic" name="New topic still allowed?" default="F_50">
+      <bpmn:documentation>F6 - One new topic submission is allowed; after that the case ends as Rejected.</bpmn:documentation>
+      <bpmn:incoming>F_48</bpmn:incoming>
+      <bpmn:outgoing>F_49</bpmn:outgoing>
+      <bpmn:outgoing>F_50</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="End_Rejected" name="Closed: rejected">
+      <bpmn:incoming>F_50</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:userTask id="Task_LateDecide" name="Decide on late submission">
+      <bpmn:documentation>F4 - Coordinator approves or denies the late submission request.</bpmn:documentation>
+      <bpmn:extensionElements>
+        <zeebe:userTask />
+        <zeebe:assignmentDefinition candidateGroups="coordinators" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>F_09</bpmn:incoming>
+      <bpmn:outgoing>F_10</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="Gw_LateDec" name="Late submission approved?" default="F_12">
+      <bpmn:incoming>F_10</bpmn:incoming>
+      <bpmn:outgoing>F_11</bpmn:outgoing>
+      <bpmn:outgoing>F_12</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="End_LateDenied" name="Closed: late request denied">
+      <bpmn:incoming>F_12</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:userTask id="Task_CoordResolve" name="Resolve validation issues with team">
+      <bpmn:documentation>F1 - Escalation after 2 failed resubmissions.</bpmn:documentation>
+      <bpmn:extensionElements>
+        <zeebe:userTask />
+        <zeebe:assignmentDefinition candidateGroups="coordinators" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>F_20</bpmn:incoming>
+      <bpmn:outgoing>F_23</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="Gw_Resolved" name="Resolved?" default="F_25">
+      <bpmn:incoming>F_23</bpmn:incoming>
+      <bpmn:outgoing>F_24</bpmn:outgoing>
+      <bpmn:outgoing>F_25</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="End_Unresolved" name="Closed: validation unresolved">
+      <bpmn:incoming>F_25</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:userTask id="Task_Screen" name="Screen proposal">
+      <bpmn:documentation>Happy path. Coordinator screens scope and format.</bpmn:documentation>
+      <bpmn:extensionElements>
+        <zeebe:userTask />
+        <zeebe:assignmentDefinition candidateGroups="coordinators" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>F_21</bpmn:incoming>
+      <bpmn:incoming>F_24</bpmn:incoming>
+      <bpmn:outgoing>F_26</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="Task_SimReview" name="Review similarity match">
+      <bpmn:documentation>F3 - Coordinator inspects the match and records the decision (modify / reject / cleared).</bpmn:documentation>
+      <bpmn:extensionElements>
+        <zeebe:userTask />
+        <zeebe:assignmentDefinition candidateGroups="coordinators" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>F_28</bpmn:incoming>
+      <bpmn:outgoing>F_30</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="Gw_SimDec" name="Coordinator decision?" default="F_33">
+      <bpmn:documentation>F3 - Both outcomes are recorded in simDecision.</bpmn:documentation>
+      <bpmn:incoming>F_30</bpmn:incoming>
+      <bpmn:outgoing>F_31</bpmn:outgoing>
+      <bpmn:outgoing>F_32</bpmn:outgoing>
+      <bpmn:outgoing>F_33</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:exclusiveGateway id="Gw_JoinReview">
+      <bpmn:incoming>F_29</bpmn:incoming>
+      <bpmn:incoming>F_33</bpmn:incoming>
+      <bpmn:incoming>F_46</bpmn:incoming>
+      <bpmn:outgoing>F_34</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="Task_Review" name="Evaluate proposal">
+      <bpmn:documentation>Happy path. Committee evaluates; result in variable decision (approved / revise / rejected).</bpmn:documentation>
+      <bpmn:extensionElements>
+        <zeebe:userTask />
+        <zeebe:assignmentDefinition candidateGroups="review-committee" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>F_34</bpmn:incoming>
+      <bpmn:outgoing>F_40</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:boundaryEvent id="Boundary_Reminder" name="5 days" cancelActivity="false" attachedToRef="Task_Review">
+      <bpmn:documentation>F7 - Non-interrupting reminder.</bpmn:documentation>
+      <bpmn:outgoing>F_35</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="Timer_Boundary_Reminder">
+        <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">P5D</bpmn:timeDuration>
+      </bpmn:timerEventDefinition>
+    </bpmn:boundaryEvent>
+    <bpmn:boundaryEvent id="Boundary_Escalate" name="10 days" attachedToRef="Task_Review">
+      <bpmn:documentation>F7 - Interrupting escalation: the HoD takes over the decision.</bpmn:documentation>
+      <bpmn:outgoing>F_37</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="Timer_Boundary_Escalate">
+        <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">P10D</bpmn:timeDuration>
+      </bpmn:timerEventDefinition>
+    </bpmn:boundaryEvent>
+    <bpmn:intermediateThrowEvent id="Throw_Escalate" name="Escalate to HoD">
+      <bpmn:incoming>F_37</bpmn:incoming>
+      <bpmn:outgoing>F_38</bpmn:outgoing>
+      <bpmn:escalationEventDefinition id="EscDef_Throw_Escalate" escalationRef="Escalation_hod" />
+    </bpmn:intermediateThrowEvent>
+    <bpmn:userTask id="Task_HoD" name="HoD decides on proposal">
+      <bpmn:documentation>F7 - Head of Department makes the overdue decision.</bpmn:documentation>
+      <bpmn:extensionElements>
+        <zeebe:userTask />
+        <zeebe:assignmentDefinition candidateGroups="hod" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>F_38</bpmn:incoming>
+      <bpmn:outgoing>F_39</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="Gw_JoinDecision">
+      <bpmn:incoming>F_39</bpmn:incoming>
+      <bpmn:incoming>F_40</bpmn:incoming>
+      <bpmn:outgoing>F_41</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:exclusiveGateway id="Gw_Decision" name="Committee decision?" default="F_44">
+      <bpmn:documentation>Exclusive gateway: approved / revise / rejected.</bpmn:documentation>
+      <bpmn:incoming>F_41</bpmn:incoming>
+      <bpmn:outgoing>F_42</bpmn:outgoing>
+      <bpmn:outgoing>F_43</bpmn:outgoing>
+      <bpmn:outgoing>F_44</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:exclusiveGateway id="Gw_Limit" name="Revision limit reached?" default="F_46">
+      <bpmn:documentation>F5 - At most 2 revision cycles; then the committee must approve or reject.</bpmn:documentation>
+      <bpmn:incoming>F_44</bpmn:incoming>
+      <bpmn:outgoing>F_45</bpmn:outgoing>
+      <bpmn:outgoing>F_46</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:subProcess id="Sub_Allocation" name="Guide allocation &#38; confirmation">
+      <bpmn:documentation>Scope of F8-F11. Contains the allocation rule, guide acceptance, recording and notification. Message event sub-process = withdrawal (F11).</bpmn:documentation>
+      <bpmn:incoming>F_42</bpmn:incoming>
+      <bpmn:incoming>F_55</bpmn:incoming>
+      <bpmn:outgoing>F_51</bpmn:outgoing>
+      <bpmn:startEvent id="A_Start" name="Allocation approved">
+        <bpmn:outgoing>A_01</bpmn:outgoing>
+      </bpmn:startEvent>
+      <bpmn:exclusiveGateway id="A_JoinLoad">
+        <bpmn:incoming>A_01</bpmn:incoming>
+        <bpmn:incoming>A_12</bpmn:incoming>
+        <bpmn:incoming>A_22</bpmn:incoming>
+        <bpmn:outgoing>A_02</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:serviceTask id="A_Load" name="Load guide roster &#38; workloads">
+        <bpmn:extensionElements>
+          <zeebe:taskDefinition type="load-guide-roster" />
+        </bpmn:extensionElements>
+        <bpmn:incoming>A_02</bpmn:incoming>
+        <bpmn:outgoing>A_03</bpmn:outgoing>
+      </bpmn:serviceTask>
+      <bpmn:businessRuleTask id="A_Rule" name="Check guide availability &#38; workload">
+        <bpmn:documentation>Business rule task (DMN guide-allocation.dmn): domain match + workload + exclusion list.</bpmn:documentation>
+        <bpmn:extensionElements>
+          <zeebe:calledDecision decisionId="allocationResult" resultVariable="allocation" />
+        </bpmn:extensionElements>
+        <bpmn:incoming>A_03</bpmn:incoming>
+        <bpmn:outgoing>A_04</bpmn:outgoing>
+      </bpmn:businessRuleTask>
+      <bpmn:exclusiveGateway id="A_Gw1" name="Guide available?" default="A_06">
+        <bpmn:documentation>F8 - Business rule returned NONE.</bpmn:documentation>
+        <bpmn:incoming>A_04</bpmn:incoming>
+        <bpmn:outgoing>A_05</bpmn:outgoing>
+        <bpmn:outgoing>A_06</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:exclusiveGateway id="A_JoinRes">
+        <bpmn:incoming>A_05</bpmn:incoming>
+        <bpmn:incoming>A_08</bpmn:incoming>
+        <bpmn:outgoing>A_14</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:serviceTask id="A_Reserve" name="Allocate guide (reserve slot)">
+        <bpmn:documentation>Reserves a slot in the guide workload. Has a compensation handler (F11).</bpmn:documentation>
+        <bpmn:extensionElements>
+          <zeebe:taskDefinition type="reserve-guide-slot" />
+        </bpmn:extensionElements>
+        <bpmn:incoming>A_14</bpmn:incoming>
+        <bpmn:outgoing>A_15</bpmn:outgoing>
+      </bpmn:serviceTask>
+      <bpmn:boundaryEvent id="A_BoundaryComp" attachedToRef="A_Reserve">
+        <bpmn:compensateEventDefinition id="CompDef_A_BoundaryComp" />
+      </bpmn:boundaryEvent>
+      <bpmn:serviceTask id="A_Release" name="Release guide slot" isForCompensation="true">
+        <bpmn:documentation>F11 - Compensation handler: frees the reserved guide slot.</bpmn:documentation>
+        <bpmn:extensionElements>
+          <zeebe:taskDefinition type="release-guide-slot" />
+        </bpmn:extensionElements>
+      </bpmn:serviceTask>
+      <bpmn:sendTask id="A_SendReq" name="Send allocation request to guide">
+        <bpmn:extensionElements>
+          <zeebe:taskDefinition type="send-notification" />
+        </bpmn:extensionElements>
+        <bpmn:incoming>A_15</bpmn:incoming>
+        <bpmn:outgoing>A_16</bpmn:outgoing>
+      </bpmn:sendTask>
+      <bpmn:userTask id="A_Wait" name="Accept or decline allocation request">
+        <bpmn:documentation>Guide response (variable guideResponse = accept / decline).</bpmn:documentation>
+        <bpmn:extensionElements>
+          <zeebe:userTask />
+          <zeebe:assignmentDefinition candidateGroups="faculty-guides" />
+        </bpmn:extensionElements>
+        <bpmn:incoming>A_16</bpmn:incoming>
+        <bpmn:outgoing>A_17</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:boundaryEvent id="A_BoundaryTimer" name="5 days" attachedToRef="A_Wait">
+        <bpmn:documentation>F9 - Silent guide: after 5 days the request is treated as declined.</bpmn:documentation>
+        <bpmn:outgoing>A_20</bpmn:outgoing>
+        <bpmn:timerEventDefinition id="Timer_A_BoundaryTimer">
+          <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">P5D</bpmn:timeDuration>
+        </bpmn:timerEventDefinition>
+      </bpmn:boundaryEvent>
+      <bpmn:exclusiveGateway id="A_Gw4" name="Guide response?" default="A_19">
+        <bpmn:incoming>A_17</bpmn:incoming>
+        <bpmn:outgoing>A_18</bpmn:outgoing>
+        <bpmn:outgoing>A_19</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:serviceTask id="A_Decline" name="Record decline, release slot, exclude guide">
+        <bpmn:documentation>F9 - Exclude the guide and count the attempt.</bpmn:documentation>
+        <bpmn:extensionElements>
+          <zeebe:taskDefinition type="record-guide-decline" />
+          <zeebe:ioMapping>
+            <zeebe:output source="=guideAttempts + 1" target="guideAttempts" />
+            <zeebe:output source="=append(excludedGuides, allocation.guideId)" target="excludedGuides" />
+          </zeebe:ioMapping>
+        </bpmn:extensionElements>
+        <bpmn:incoming>A_19</bpmn:incoming>
+        <bpmn:incoming>A_20</bpmn:incoming>
+        <bpmn:outgoing>A_21</bpmn:outgoing>
+      </bpmn:serviceTask>
+      <bpmn:exclusiveGateway id="A_Gw5" name="Fewer than 3 attempts?" default="A_23">
+        <bpmn:documentation>F9 - After 3 attempts the coordinator allocates manually.</bpmn:documentation>
+        <bpmn:incoming>A_21</bpmn:incoming>
+        <bpmn:outgoing>A_22</bpmn:outgoing>
+        <bpmn:outgoing>A_23</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:userTask id="A_NoneFound" name="Allocate manually, co-guide, external or waiting list">
+        <bpmn:documentation>F8/F9 - Coordinator resolves the case. Output: coordDecision (assign / waitlist) and allocation.guideId.</bpmn:documentation>
+        <bpmn:extensionElements>
+          <zeebe:userTask />
+          <zeebe:assignmentDefinition candidateGroups="coordinators" />
+        </bpmn:extensionElements>
+        <bpmn:incoming>A_06</bpmn:incoming>
+        <bpmn:incoming>A_23</bpmn:incoming>
+        <bpmn:outgoing>A_07</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:exclusiveGateway id="A_Gw2" name="Coordinator decision?" default="A_08">
+        <bpmn:incoming>A_07</bpmn:incoming>
+        <bpmn:outgoing>A_08</bpmn:outgoing>
+        <bpmn:outgoing>A_09</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:eventBasedGateway id="A_GwWait" name="Wait for capacity">
+        <bpmn:incoming>A_09</bpmn:incoming>
+        <bpmn:outgoing>A_10</bpmn:outgoing>
+        <bpmn:outgoing>A_11</bpmn:outgoing>
+      </bpmn:eventBasedGateway>
+      <bpmn:intermediateCatchEvent id="A_CatchCap" name="Guide capacity freed">
+        <bpmn:incoming>A_10</bpmn:incoming>
+        <bpmn:outgoing>A_12</bpmn:outgoing>
+        <bpmn:messageEventDefinition id="MsgDef_A_CatchCap" messageRef="Message_capacity" />
+      </bpmn:intermediateCatchEvent>
+      <bpmn:intermediateCatchEvent id="A_CatchTimer" name="30 days">
+        <bpmn:incoming>A_11</bpmn:incoming>
+        <bpmn:outgoing>A_13</bpmn:outgoing>
+        <bpmn:timerEventDefinition id="Timer_A_CatchTimer">
+          <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">P30D</bpmn:timeDuration>
+        </bpmn:timerEventDefinition>
+      </bpmn:intermediateCatchEvent>
+      <bpmn:endEvent id="A_EndNoGuide" name="No guide in 30 days">
+        <bpmn:incoming>A_13</bpmn:incoming>
+        <bpmn:errorEventDefinition id="ErrDef_A_EndNoGuide" errorRef="Error_noguide" />
+      </bpmn:endEvent>
+      <bpmn:serviceTask id="A_Record" name="Record allocation in system">
+        <bpmn:documentation>F10 - Retries 3 times, then the worker throws DB_WRITE_ERROR.</bpmn:documentation>
+        <bpmn:extensionElements>
+          <zeebe:taskDefinition type="record-allocation" retries="3" />
+        </bpmn:extensionElements>
+        <bpmn:incoming>A_18</bpmn:incoming>
+        <bpmn:outgoing>A_24</bpmn:outgoing>
+      </bpmn:serviceTask>
+      <bpmn:boundaryEvent id="A_BoundaryDb" name="DB error" attachedToRef="A_Record">
+        <bpmn:documentation>F10 - fallback to manual.</bpmn:documentation>
+        <bpmn:outgoing>A_26</bpmn:outgoing>
+        <bpmn:errorEventDefinition id="ErrDef_A_BoundaryDb" errorRef="Error_db" />
+      </bpmn:boundaryEvent>
+      <bpmn:sendTask id="A_Notify" name="Notify student of allocation">
+        <bpmn:documentation>F10 - Retries 3 times, then the worker throws NOTIFICATION_FAILED.</bpmn:documentation>
+        <bpmn:extensionElements>
+          <zeebe:taskDefinition type="send-notification" retries="3" />
+        </bpmn:extensionElements>
+        <bpmn:incoming>A_24</bpmn:incoming>
+        <bpmn:outgoing>A_25</bpmn:outgoing>
+      </bpmn:sendTask>
+      <bpmn:boundaryEvent id="A_BoundaryNotify" name="E-mail error" attachedToRef="A_Notify">
+        <bpmn:documentation>F10 - fallback to manual.</bpmn:documentation>
+        <bpmn:outgoing>A_27</bpmn:outgoing>
+        <bpmn:errorEventDefinition id="ErrDef_A_BoundaryNotify" errorRef="Error_notify" />
+      </bpmn:boundaryEvent>
+      <bpmn:userTask id="A_Manual" name="Coordinator records / notifies manually">
+        <bpmn:documentation>F10 - Manual fallback after retries are exhausted.</bpmn:documentation>
+        <bpmn:extensionElements>
+          <zeebe:userTask />
+          <zeebe:assignmentDefinition candidateGroups="coordinators" />
+        </bpmn:extensionElements>
+        <bpmn:incoming>A_26</bpmn:incoming>
+        <bpmn:incoming>A_27</bpmn:incoming>
+        <bpmn:outgoing>A_28</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:endEvent id="A_End" name="Guide confirmed">
+        <bpmn:incoming>A_25</bpmn:incoming>
+        <bpmn:incoming>A_28</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:subProcess id="Esub_Withdraw" name="Withdrawal by team or guide" triggeredByEvent="true">
+        <bpmn:documentation>F11 - Interrupting message event sub-process (team dissolves / guide on leave).</bpmn:documentation>
+        <bpmn:startEvent id="E_Start" name="Withdrawal received">
+          <bpmn:outgoing>E_01</bpmn:outgoing>
+          <bpmn:messageEventDefinition id="MsgDef_E_Start" messageRef="Message_withdraw" />
+        </bpmn:startEvent>
+        <bpmn:serviceTask id="E_Record" name="Record withdrawal (team / guide)">
+          <bpmn:extensionElements>
+            <zeebe:taskDefinition type="record-withdrawal" />
+            <zeebe:ioMapping>
+              <zeebe:output source="=withdrawalSource" target="withdrawalBy" />
+            </zeebe:ioMapping>
+          </bpmn:extensionElements>
+          <bpmn:incoming>E_01</bpmn:incoming>
+          <bpmn:outgoing>E_02</bpmn:outgoing>
+        </bpmn:serviceTask>
+        <bpmn:intermediateThrowEvent id="E_Comp" name="Release guide slot">
+          <bpmn:incoming>E_02</bpmn:incoming>
+          <bpmn:outgoing>E_03</bpmn:outgoing>
+          <bpmn:compensateEventDefinition id="CompDef_E_Comp" />
+        </bpmn:intermediateThrowEvent>
+        <bpmn:endEvent id="E_End" name="Scope closed">
+          <bpmn:incoming>E_03</bpmn:incoming>
+        </bpmn:endEvent>
+        <bpmn:sequenceFlow id="E_01" sourceRef="E_Start" targetRef="E_Record" />
+        <bpmn:sequenceFlow id="E_02" sourceRef="E_Record" targetRef="E_Comp" />
+        <bpmn:sequenceFlow id="E_03" sourceRef="E_Comp" targetRef="E_End" />
+      </bpmn:subProcess>
+      <bpmn:sequenceFlow id="A_01" sourceRef="A_Start" targetRef="A_JoinLoad" />
+      <bpmn:sequenceFlow id="A_02" sourceRef="A_JoinLoad" targetRef="A_Load" />
+      <bpmn:sequenceFlow id="A_03" sourceRef="A_Load" targetRef="A_Rule" />
+      <bpmn:sequenceFlow id="A_04" sourceRef="A_Rule" targetRef="A_Gw1" />
+      <bpmn:sequenceFlow id="A_05" name="Found" sourceRef="A_Gw1" targetRef="A_JoinRes">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=allocation.status = "AVAILABLE"</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="A_06" name="None" sourceRef="A_Gw1" targetRef="A_NoneFound" />
+      <bpmn:sequenceFlow id="A_07" sourceRef="A_NoneFound" targetRef="A_Gw2" />
+      <bpmn:sequenceFlow id="A_08" name="Assign manually / co-guide / external" sourceRef="A_Gw2" targetRef="A_JoinRes" />
+      <bpmn:sequenceFlow id="A_09" name="Waiting list" sourceRef="A_Gw2" targetRef="A_GwWait">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=coordDecision = "waitlist"</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="A_10" sourceRef="A_GwWait" targetRef="A_CatchCap" />
+      <bpmn:sequenceFlow id="A_11" sourceRef="A_GwWait" targetRef="A_CatchTimer" />
+      <bpmn:sequenceFlow id="A_12" sourceRef="A_CatchCap" targetRef="A_JoinLoad" />
+      <bpmn:sequenceFlow id="A_13" sourceRef="A_CatchTimer" targetRef="A_EndNoGuide" />
+      <bpmn:sequenceFlow id="A_14" sourceRef="A_JoinRes" targetRef="A_Reserve" />
+      <bpmn:sequenceFlow id="A_15" sourceRef="A_Reserve" targetRef="A_SendReq" />
+      <bpmn:sequenceFlow id="A_16" sourceRef="A_SendReq" targetRef="A_Wait" />
+      <bpmn:sequenceFlow id="A_17" sourceRef="A_Wait" targetRef="A_Gw4" />
+      <bpmn:sequenceFlow id="A_18" name="Accepts" sourceRef="A_Gw4" targetRef="A_Record">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=guideResponse = "accept"</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="A_19" name="Declines" sourceRef="A_Gw4" targetRef="A_Decline" />
+      <bpmn:sequenceFlow id="A_20" sourceRef="A_BoundaryTimer" targetRef="A_Decline" />
+      <bpmn:sequenceFlow id="A_21" sourceRef="A_Decline" targetRef="A_Gw5" />
+      <bpmn:sequenceFlow id="A_22" name="Yes: retry rule" sourceRef="A_Gw5" targetRef="A_JoinLoad">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=guideAttempts &lt; 3</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="A_23" name="No: 3 attempts used" sourceRef="A_Gw5" targetRef="A_NoneFound" />
+      <bpmn:sequenceFlow id="A_24" sourceRef="A_Record" targetRef="A_Notify" />
+      <bpmn:sequenceFlow id="A_25" sourceRef="A_Notify" targetRef="A_End" />
+      <bpmn:sequenceFlow id="A_26" sourceRef="A_BoundaryDb" targetRef="A_Manual" />
+      <bpmn:sequenceFlow id="A_27" sourceRef="A_BoundaryNotify" targetRef="A_Manual" />
+      <bpmn:sequenceFlow id="A_28" sourceRef="A_Manual" targetRef="A_End" />
+      <bpmn:association id="Assoc_Comp" associationDirection="None" sourceRef="A_BoundaryComp" targetRef="A_Release" />
+    </bpmn:subProcess>
+    <bpmn:boundaryEvent id="Boundary_NoGuide" name="No guide" attachedToRef="Sub_Allocation">
+      <bpmn:documentation>F8 - Waiting-list timeout.</bpmn:documentation>
+      <bpmn:outgoing>F_56</bpmn:outgoing>
+      <bpmn:errorEventDefinition id="ErrDef_Boundary_NoGuide" errorRef="Error_noguide" />
+    </bpmn:boundaryEvent>
+    <bpmn:exclusiveGateway id="Gw_After" name="Allocation outcome?" default="F_52">
+      <bpmn:documentation>F11 - Evaluates withdrawalBy: guide -&gt; re-allocate, team -&gt; close, none -&gt; success.</bpmn:documentation>
+      <bpmn:incoming>F_51</bpmn:incoming>
+      <bpmn:outgoing>F_52</bpmn:outgoing>
+      <bpmn:outgoing>F_53</bpmn:outgoing>
+      <bpmn:outgoing>F_54</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:scriptTask id="Task_Prep" name="Exclude withdrawn guide, reset counters">
+      <bpmn:documentation>F11 - Returns the team to the allocation step.</bpmn:documentation>
+      <bpmn:extensionElements>
+        <zeebe:script expression="=true" resultVariable="prepared" />
+        <zeebe:ioMapping>
+          <zeebe:output source="=append(excludedGuides, allocation.guideId)" target="excludedGuides" />
+          <zeebe:output source="=0" target="guideAttempts" />
+          <zeebe:output source="=&#34;none&#34;" target="withdrawalBy" />
+        </zeebe:ioMapping>
+      </bpmn:extensionElements>
+      <bpmn:incoming>F_53</bpmn:incoming>
+      <bpmn:outgoing>F_55</bpmn:outgoing>
+    </bpmn:scriptTask>
+    <bpmn:endEvent id="End_OK" name="Project allocated">
+      <bpmn:incoming>F_52</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="End_Withdrawn" name="Closed: withdrawn">
+      <bpmn:incoming>F_54</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sendTask id="Task_NotifyNoGuide" name="Notify team &#38; coordinator: no guide">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="send-notification" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>F_56</bpmn:incoming>
+      <bpmn:outgoing>F_57</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:endEvent id="End_NoGuide" name="Closed: no guide available">
+      <bpmn:incoming>F_57</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="F_01" sourceRef="Start_Submit" targetRef="Task_Submit" />
+    <bpmn:sequenceFlow id="F_02" sourceRef="Task_Submit" targetRef="Task_Validate" />
+    <bpmn:sequenceFlow id="F_03" sourceRef="Boundary_Deadline" targetRef="Task_FlagLate" />
+    <bpmn:sequenceFlow id="F_04" sourceRef="Task_FlagLate" targetRef="Gw_Late" />
+    <bpmn:sequenceFlow id="F_05" sourceRef="Gw_Late" targetRef="Catch_LateTimer" />
+    <bpmn:sequenceFlow id="F_06" sourceRef="Gw_Late" targetRef="Catch_LateMsg" />
+    <bpmn:sequenceFlow id="F_07" sourceRef="Catch_LateTimer" targetRef="Task_NotifyLapse" />
+    <bpmn:sequenceFlow id="F_08" sourceRef="Task_NotifyLapse" targetRef="End_Lapsed" />
+    <bpmn:sequenceFlow id="F_09" sourceRef="Catch_LateMsg" targetRef="Task_LateDecide" />
+    <bpmn:sequenceFlow id="F_10" sourceRef="Task_LateDecide" targetRef="Gw_LateDec" />
+    <bpmn:sequenceFlow id="F_11" name="Yes" sourceRef="Gw_LateDec" targetRef="Task_Submit">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=lateApproved</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="F_12" name="No" sourceRef="Gw_LateDec" targetRef="End_LateDenied" />
+    <bpmn:sequenceFlow id="F_13" sourceRef="Boundary_ReviseTimer" targetRef="End_LapsedRevise" />
+    <bpmn:sequenceFlow id="F_14" sourceRef="Task_Revise" targetRef="Task_Validate" />
+    <bpmn:sequenceFlow id="F_15" sourceRef="Task_Validate" targetRef="Gw_Team" />
+    <bpmn:sequenceFlow id="F_16" name="Yes" sourceRef="Gw_Team" targetRef="Gw_Form" />
+    <bpmn:sequenceFlow id="F_17" name="No" sourceRef="Gw_Team" targetRef="Task_NotifyInvalid">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=not(teamValid)</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="F_18" sourceRef="Task_NotifyInvalid" targetRef="End_InvalidTeam" />
+    <bpmn:sequenceFlow id="F_19" name="Incomplete, attempts &#60; 2" sourceRef="Gw_Form" targetRef="Task_ReturnErrors">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=not(formValid) and validationAttempts &lt; 2</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="F_20" name="Incomplete, attempts &#62;= 2" sourceRef="Gw_Form" targetRef="Task_CoordResolve">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=not(formValid) and validationAttempts &gt;= 2</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="F_21" name="Complete" sourceRef="Gw_Form" targetRef="Task_Screen" />
+    <bpmn:sequenceFlow id="F_22" sourceRef="Task_ReturnErrors" targetRef="Task_Revise" />
+    <bpmn:sequenceFlow id="F_23" sourceRef="Task_CoordResolve" targetRef="Gw_Resolved" />
+    <bpmn:sequenceFlow id="F_24" name="Yes" sourceRef="Gw_Resolved" targetRef="Task_Screen">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=resolved</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="F_25" name="No" sourceRef="Gw_Resolved" targetRef="End_Unresolved" />
+    <bpmn:sequenceFlow id="F_26" sourceRef="Task_Screen" targetRef="Task_Similarity" />
+    <bpmn:sequenceFlow id="F_27" sourceRef="Task_Similarity" targetRef="Gw_Sim" />
+    <bpmn:sequenceFlow id="F_28" name="Yes" sourceRef="Gw_Sim" targetRef="Task_SimReview">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=similarityScore &gt; similarityThreshold</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="F_29" name="No" sourceRef="Gw_Sim" targetRef="Gw_JoinReview" />
+    <bpmn:sequenceFlow id="F_30" sourceRef="Task_SimReview" targetRef="Gw_SimDec" />
+    <bpmn:sequenceFlow id="F_31" name="Modify topic" sourceRef="Gw_SimDec" targetRef="Task_Revise">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=simDecision = "modify"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="F_32" name="Reject" sourceRef="Gw_SimDec" targetRef="Task_NotifyReject">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=simDecision = "reject"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="F_33" name="Cleared" sourceRef="Gw_SimDec" targetRef="Gw_JoinReview" />
+    <bpmn:sequenceFlow id="F_34" sourceRef="Gw_JoinReview" targetRef="Task_Review" />
+    <bpmn:sequenceFlow id="F_35" sourceRef="Boundary_Reminder" targetRef="Task_Reminder" />
+    <bpmn:sequenceFlow id="F_36" sourceRef="Task_Reminder" targetRef="End_Reminder" />
+    <bpmn:sequenceFlow id="F_37" sourceRef="Boundary_Escalate" targetRef="Throw_Escalate" />
+    <bpmn:sequenceFlow id="F_38" sourceRef="Throw_Escalate" targetRef="Task_HoD" />
+    <bpmn:sequenceFlow id="F_39" sourceRef="Task_HoD" targetRef="Gw_JoinDecision" />
+    <bpmn:sequenceFlow id="F_40" sourceRef="Task_Review" targetRef="Gw_JoinDecision" />
+    <bpmn:sequenceFlow id="F_41" sourceRef="Gw_JoinDecision" targetRef="Gw_Decision" />
+    <bpmn:sequenceFlow id="F_42" name="Approved" sourceRef="Gw_Decision" targetRef="Sub_Allocation">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=decision = "approved"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="F_43" name="Rejected" sourceRef="Gw_Decision" targetRef="Task_NotifyReject">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=decision = "rejected"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="F_44" name="Revise" sourceRef="Gw_Decision" targetRef="Gw_Limit" />
+    <bpmn:sequenceFlow id="F_45" name="No, cycles &#60; 2" sourceRef="Gw_Limit" targetRef="Task_SendRevision">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=revisionCycles &lt; 2</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="F_46" name="Yes: approve or reject only" sourceRef="Gw_Limit" targetRef="Gw_JoinReview" />
+    <bpmn:sequenceFlow id="F_47" sourceRef="Task_SendRevision" targetRef="Task_Revise" />
+    <bpmn:sequenceFlow id="F_48" sourceRef="Task_NotifyReject" targetRef="Gw_NewTopic" />
+    <bpmn:sequenceFlow id="F_49" name="Yes" sourceRef="Gw_NewTopic" targetRef="Task_Revise">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=newTopicAllowance &gt;= 0</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="F_50" name="No" sourceRef="Gw_NewTopic" targetRef="End_Rejected" />
+    <bpmn:sequenceFlow id="F_51" sourceRef="Sub_Allocation" targetRef="Gw_After" />
+    <bpmn:sequenceFlow id="F_52" name="No withdrawal" sourceRef="Gw_After" targetRef="End_OK" />
+    <bpmn:sequenceFlow id="F_53" name="Guide withdrew" sourceRef="Gw_After" targetRef="Task_Prep">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=withdrawalBy = "guide"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="F_54" name="Team withdrew" sourceRef="Gw_After" targetRef="End_Withdrawn">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=withdrawalBy = "team"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="F_55" sourceRef="Task_Prep" targetRef="Sub_Allocation" />
+    <bpmn:sequenceFlow id="F_56" sourceRef="Boundary_NoGuide" targetRef="Task_NotifyNoGuide" />
+    <bpmn:sequenceFlow id="F_57" sourceRef="Task_NotifyNoGuide" targetRef="End_NoGuide" />
+  </bpmn:process>
+  <bpmn:message id="Message_late" name="late-submission-request">
+    <bpmn:extensionElements>
+      <zeebe:subscription correlationKey="=proposalId" />
+    </bpmn:extensionElements>
+  </bpmn:message>
+  <bpmn:message id="Message_withdraw" name="project-withdrawal">
+    <bpmn:extensionElements>
+      <zeebe:subscription correlationKey="=proposalId" />
+    </bpmn:extensionElements>
+  </bpmn:message>
+  <bpmn:message id="Message_capacity" name="guide-capacity-freed">
+    <bpmn:extensionElements>
+      <zeebe:subscription correlationKey="=proposalDomain" />
+    </bpmn:extensionElements>
+  </bpmn:message>
+  <bpmn:error id="Error_noguide" name="NO_GUIDE_AVAILABLE" errorCode="NO_GUIDE_AVAILABLE" />
+  <bpmn:error id="Error_db" name="DB_WRITE_ERROR" errorCode="DB_WRITE_ERROR" />
+  <bpmn:error id="Error_notify" name="NOTIFICATION_FAILED" errorCode="NOTIFICATION_FAILED" />
+  <bpmn:escalation id="Escalation_hod" name="REVIEW_SLA_BREACH" escalationCode="REVIEW_SLA_BREACH" />
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Collaboration_Project">
+      <bpmndi:BPMNShape id="Participant_Programme_di" bpmnElement="Participant_Programme" isHorizontal="true">
+        <dc:Bounds x="160" y="100" width="4640" height="1650" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_G_di" bpmnElement="Lane_G" isHorizontal="true">
+        <dc:Bounds x="190" y="1250" width="4610" height="500" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_R_di" bpmnElement="Lane_R" isHorizontal="true">
+        <dc:Bounds x="190" y="1050" width="4610" height="200" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_C_di" bpmnElement="Lane_C" isHorizontal="true">
+        <dc:Bounds x="190" y="750" width="4610" height="300" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_M_di" bpmnElement="Lane_M" isHorizontal="true">
+        <dc:Bounds x="190" y="330" width="4610" height="420" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_S_di" bpmnElement="Lane_S" isHorizontal="true">
+        <dc:Bounds x="190" y="100" width="4610" height="230" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Start_Submit_di" bpmnElement="Start_Submit">
+        <dc:Bounds x="332" y="152" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="300" y="191" width="100" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Submit_di" bpmnElement="Task_Submit">
+        <dc:Bounds x="435" y="130" width="110" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Revise_di" bpmnElement="Task_Revise">
+        <dc:Bounds x="575" y="230" width="110" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_LapsedRevise_di" bpmnElement="End_LapsedRevise">
+        <dc:Bounds x="612" y="132" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="580" y="171" width="100" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_FlagLate_di" bpmnElement="Task_FlagLate">
+        <dc:Bounds x="435" y="360" width="110" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gw_Late_di" bpmnElement="Gw_Late">
+        <dc:Bounds x="465" y="475" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="518" y="486" width="100" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Catch_LateTimer_di" bpmnElement="Catch_LateTimer">
+        <dc:Bounds x="332" y="482" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="300" y="452" width="100" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Catch_LateMsg_di" bpmnElement="Catch_LateMsg">
+        <dc:Bounds x="472" y="582" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="511" y="586" width="100" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_NotifyLapse_di" bpmnElement="Task_NotifyLapse">
+        <dc:Bounds x="295" y="560" width="110" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_Lapsed_di" bpmnElement="End_Lapsed">
+        <dc:Bounds x="332" y="682" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="300" y="721" width="100" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Validate_di" bpmnElement="Task_Validate">
+        <dc:Bounds x="575" y="460" width="110" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gw_Team_di" bpmnElement="Gw_Team" isMarkerVisible="true">
+        <dc:Bounds x="745" y="475" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="720" y="445" width="100" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_NotifyInvalid_di" bpmnElement="Task_NotifyInvalid">
+        <dc:Bounds x="715" y="560" width="110" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_InvalidTeam_di" bpmnElement="End_InvalidTeam">
+        <dc:Bounds x="752" y="682" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="720" y="721" width="100" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gw_Form_di" bpmnElement="Gw_Form" isMarkerVisible="true">
+        <dc:Bounds x="885" y="475" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="860" y="445" width="100" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ReturnErrors_di" bpmnElement="Task_ReturnErrors">
+        <dc:Bounds x="855" y="360" width="110" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Similarity_di" bpmnElement="Task_Similarity">
+        <dc:Bounds x="1135" y="660" width="110" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gw_Sim_di" bpmnElement="Gw_Sim" isMarkerVisible="true">
+        <dc:Bounds x="1305" y="675" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1280" y="645" width="100" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Reminder_di" bpmnElement="Task_Reminder">
+        <dc:Bounds x="1805" y="460" width="110" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_Reminder_di" bpmnElement="End_Reminder">
+        <dc:Bounds x="1982" y="482" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1950" y="521" width="100" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_SendRevision_di" bpmnElement="Task_SendRevision">
+        <dc:Bounds x="1945" y="360" width="110" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_NotifyReject_di" bpmnElement="Task_NotifyReject">
+        <dc:Bounds x="2005" y="560" width="110" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gw_NewTopic_di" bpmnElement="Gw_NewTopic" isMarkerVisible="true">
+        <dc:Bounds x="2175" y="575" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2150" y="545" width="100" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_Rejected_di" bpmnElement="End_Rejected">
+        <dc:Bounds x="2182" y="682" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2150" y="721" width="100" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_LateDecide_di" bpmnElement="Task_LateDecide">
+        <dc:Bounds x="435" y="760" width="110" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gw_LateDec_di" bpmnElement="Gw_LateDec" isMarkerVisible="true">
+        <dc:Bounds x="605" y="775" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="580" y="745" width="100" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_LateDenied_di" bpmnElement="End_LateDenied">
+        <dc:Bounds x="752" y="782" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="720" y="821" width="100" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_CoordResolve_di" bpmnElement="Task_CoordResolve">
+        <dc:Bounds x="855" y="760" width="110" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gw_Resolved_di" bpmnElement="Gw_Resolved" isMarkerVisible="true">
+        <dc:Bounds x="885" y="875" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="938" y="886" width="100" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_Unresolved_di" bpmnElement="End_Unresolved">
+        <dc:Bounds x="752" y="882" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="720" y="921" width="100" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Screen_di" bpmnElement="Task_Screen">
+        <dc:Bounds x="995" y="760" width="110" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_SimReview_di" bpmnElement="Task_SimReview">
+        <dc:Bounds x="1275" y="760" width="110" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gw_SimDec_di" bpmnElement="Gw_SimDec" isMarkerVisible="true">
+        <dc:Bounds x="1445" y="775" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1420" y="745" width="100" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gw_JoinReview_di" bpmnElement="Gw_JoinReview" isMarkerVisible="true">
+        <dc:Bounds x="1725" y="1075" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Review_di" bpmnElement="Task_Review">
+        <dc:Bounds x="1835" y="1060" width="110" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Throw_Escalate_di" bpmnElement="Throw_Escalate">
+        <dc:Bounds x="1902" y="1182" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1870" y="1152" width="100" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_HoD_di" bpmnElement="Task_HoD">
+        <dc:Bounds x="2005" y="1160" width="110" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gw_JoinDecision_di" bpmnElement="Gw_JoinDecision" isMarkerVisible="true">
+        <dc:Bounds x="2035" y="1075" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gw_Decision_di" bpmnElement="Gw_Decision" isMarkerVisible="true">
+        <dc:Bounds x="2175" y="1075" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2150" y="1045" width="100" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gw_Limit_di" bpmnElement="Gw_Limit" isMarkerVisible="true">
+        <dc:Bounds x="2175" y="1175" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2228" y="1186" width="100" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Sub_Allocation_di" bpmnElement="Sub_Allocation" isExpanded="true">
+        <dc:Bounds x="2400" y="430" width="1960" height="1280" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A_Start_di" bpmnElement="A_Start">
+        <dc:Bounds x="2462" y="482" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2430" y="521" width="100" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A_JoinLoad_di" bpmnElement="A_JoinLoad" isMarkerVisible="true">
+        <dc:Bounds x="2545" y="475" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A_Load_di" bpmnElement="A_Load">
+        <dc:Bounds x="2645" y="460" width="110" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A_Rule_di" bpmnElement="A_Rule">
+        <dc:Bounds x="2805" y="460" width="110" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A_Gw1_di" bpmnElement="A_Gw1" isMarkerVisible="true">
+        <dc:Bounds x="2975" y="475" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2950" y="445" width="100" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A_JoinRes_di" bpmnElement="A_JoinRes" isMarkerVisible="true">
+        <dc:Bounds x="3115" y="475" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A_Reserve_di" bpmnElement="A_Reserve">
+        <dc:Bounds x="3225" y="460" width="110" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A_Release_di" bpmnElement="A_Release">
+        <dc:Bounds x="3225" y="580" width="110" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A_SendReq_di" bpmnElement="A_SendReq">
+        <dc:Bounds x="3385" y="460" width="110" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A_Wait_di" bpmnElement="A_Wait">
+        <dc:Bounds x="3385" y="1260" width="110" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A_Gw4_di" bpmnElement="A_Gw4" isMarkerVisible="true">
+        <dc:Bounds x="3575" y="1275" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3550" y="1328" width="100" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A_Decline_di" bpmnElement="A_Decline">
+        <dc:Bounds x="3545" y="560" width="110" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A_Gw5_di" bpmnElement="A_Gw5" isMarkerVisible="true">
+        <dc:Bounds x="3695" y="575" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3748" y="586" width="100" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A_NoneFound_di" bpmnElement="A_NoneFound">
+        <dc:Bounds x="2945" y="860" width="110" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A_Gw2_di" bpmnElement="A_Gw2" isMarkerVisible="true">
+        <dc:Bounds x="3115" y="875" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3090" y="845" width="100" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A_GwWait_di" bpmnElement="A_GwWait">
+        <dc:Bounds x="3115" y="985" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3090" y="1038" width="100" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A_CatchCap_di" bpmnElement="A_CatchCap">
+        <dc:Bounds x="2982" y="992" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2950" y="1031" width="100" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A_CatchTimer_di" bpmnElement="A_CatchTimer">
+        <dc:Bounds x="3262" y="992" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3301" y="996" width="100" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A_EndNoGuide_di" bpmnElement="A_EndNoGuide">
+        <dc:Bounds x="3262" y="1092" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3301" y="1096" width="100" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A_Record_di" bpmnElement="A_Record">
+        <dc:Bounds x="3815" y="460" width="110" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A_Notify_di" bpmnElement="A_Notify">
+        <dc:Bounds x="3975" y="460" width="110" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A_Manual_di" bpmnElement="A_Manual">
+        <dc:Bounds x="3895" y="760" width="110" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A_End_di" bpmnElement="A_End">
+        <dc:Bounds x="4172" y="782" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4140" y="821" width="100" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Esub_Withdraw_di" bpmnElement="Esub_Withdraw" isExpanded="true">
+        <dc:Bounds x="2500" y="1450" width="700" height="200" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E_Start_di" bpmnElement="E_Start">
+        <dc:Bounds x="2562" y="1532" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2530" y="1571" width="100" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E_Record_di" bpmnElement="E_Record">
+        <dc:Bounds x="2685" y="1510" width="110" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E_Comp_di" bpmnElement="E_Comp">
+        <dc:Bounds x="2882" y="1532" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2850" y="1571" width="100" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E_End_di" bpmnElement="E_End">
+        <dc:Bounds x="3022" y="1532" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2990" y="1571" width="100" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="E_01_di" bpmnElement="E_01">
+        <di:waypoint x="2598" y="1550" />
+        <di:waypoint x="2685" y="1550" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_02_di" bpmnElement="E_02">
+        <di:waypoint x="2795" y="1550" />
+        <di:waypoint x="2882" y="1550" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_03_di" bpmnElement="E_03">
+        <di:waypoint x="2918" y="1550" />
+        <di:waypoint x="3022" y="1550" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="A_BoundaryNotify_di" bpmnElement="A_BoundaryNotify">
+        <dc:Bounds x="4012" y="522" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4051" y="526" width="100" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A_BoundaryDb_di" bpmnElement="A_BoundaryDb">
+        <dc:Bounds x="3852" y="522" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3749" y="526" width="100" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A_BoundaryTimer_di" bpmnElement="A_BoundaryTimer">
+        <dc:Bounds x="3382" y="1242" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3279" y="1246" width="100" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A_BoundaryComp_di" bpmnElement="A_BoundaryComp">
+        <dc:Bounds x="3262" y="522" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="A_01_di" bpmnElement="A_01">
+        <di:waypoint x="2498" y="500" />
+        <di:waypoint x="2545" y="500" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="A_02_di" bpmnElement="A_02">
+        <di:waypoint x="2595" y="500" />
+        <di:waypoint x="2645" y="500" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="A_03_di" bpmnElement="A_03">
+        <di:waypoint x="2755" y="500" />
+        <di:waypoint x="2805" y="500" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="A_04_di" bpmnElement="A_04">
+        <di:waypoint x="2915" y="500" />
+        <di:waypoint x="2975" y="500" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="A_05_di" bpmnElement="A_05">
+        <di:waypoint x="3025" y="500" />
+        <di:waypoint x="3115" y="500" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3015" y="471" width="110" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="A_06_di" bpmnElement="A_06">
+        <di:waypoint x="3000" y="525" />
+        <di:waypoint x="3000" y="860" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3004" y="679" width="110" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="A_07_di" bpmnElement="A_07">
+        <di:waypoint x="3055" y="900" />
+        <di:waypoint x="3115" y="900" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="A_08_di" bpmnElement="A_08">
+        <di:waypoint x="3140" y="875" />
+        <di:waypoint x="3140" y="525" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3144" y="686" width="110" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="A_09_di" bpmnElement="A_09">
+        <di:waypoint x="3140" y="925" />
+        <di:waypoint x="3140" y="985" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3144" y="941" width="110" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="A_10_di" bpmnElement="A_10">
+        <di:waypoint x="3115" y="1010" />
+        <di:waypoint x="3018" y="1010" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="A_11_di" bpmnElement="A_11">
+        <di:waypoint x="3165" y="1010" />
+        <di:waypoint x="3262" y="1010" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="A_12_di" bpmnElement="A_12">
+        <di:waypoint x="2982" y="1010" />
+        <di:waypoint x="2570" y="1010" />
+        <di:waypoint x="2570" y="525" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="A_13_di" bpmnElement="A_13">
+        <di:waypoint x="3280" y="1028" />
+        <di:waypoint x="3280" y="1092" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="A_14_di" bpmnElement="A_14">
+        <di:waypoint x="3165" y="500" />
+        <di:waypoint x="3225" y="500" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="A_15_di" bpmnElement="A_15">
+        <di:waypoint x="3335" y="500" />
+        <di:waypoint x="3385" y="500" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="A_16_di" bpmnElement="A_16">
+        <di:waypoint x="3440" y="540" />
+        <di:waypoint x="3440" y="1260" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="A_17_di" bpmnElement="A_17">
+        <di:waypoint x="3495" y="1300" />
+        <di:waypoint x="3575" y="1300" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="A_18_di" bpmnElement="A_18">
+        <di:waypoint x="3625" y="1300" />
+        <di:waypoint x="3800" y="1300" />
+        <di:waypoint x="3800" y="500" />
+        <di:waypoint x="3815" y="500" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3804" y="886" width="110" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="A_19_di" bpmnElement="A_19">
+        <di:waypoint x="3600" y="1275" />
+        <di:waypoint x="3600" y="640" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3486" y="944" width="110" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="A_20_di" bpmnElement="A_20">
+        <di:waypoint x="3400" y="1242" />
+        <di:waypoint x="3400" y="600" />
+        <di:waypoint x="3545" y="600" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="A_21_di" bpmnElement="A_21">
+        <di:waypoint x="3655" y="600" />
+        <di:waypoint x="3695" y="600" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="A_22_di" bpmnElement="A_22">
+        <di:waypoint x="3720" y="575" />
+        <di:waypoint x="3720" y="452" />
+        <di:waypoint x="2570" y="452" />
+        <di:waypoint x="2570" y="475" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3090" y="423" width="110" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="A_23_di" bpmnElement="A_23">
+        <di:waypoint x="3720" y="625" />
+        <di:waypoint x="3720" y="960" />
+        <di:waypoint x="3000" y="960" />
+        <di:waypoint x="3000" y="940" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3305" y="931" width="110" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="A_24_di" bpmnElement="A_24">
+        <di:waypoint x="3925" y="500" />
+        <di:waypoint x="3975" y="500" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="A_25_di" bpmnElement="A_25">
+        <di:waypoint x="4085" y="500" />
+        <di:waypoint x="4190" y="500" />
+        <di:waypoint x="4190" y="782" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="A_26_di" bpmnElement="A_26">
+        <di:waypoint x="3870" y="558" />
+        <di:waypoint x="3870" y="800" />
+        <di:waypoint x="3895" y="800" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="A_27_di" bpmnElement="A_27">
+        <di:waypoint x="4030" y="558" />
+        <di:waypoint x="4030" y="650" />
+        <di:waypoint x="3950" y="650" />
+        <di:waypoint x="3950" y="760" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="A_28_di" bpmnElement="A_28">
+        <di:waypoint x="4005" y="800" />
+        <di:waypoint x="4172" y="800" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Assoc_Comp_di" bpmnElement="Assoc_Comp">
+        <di:waypoint x="3280" y="558" />
+        <di:waypoint x="3280" y="580" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="Gw_After_di" bpmnElement="Gw_After" isMarkerVisible="true">
+        <dc:Bounds x="4475" y="475" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4528" y="486" width="100" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Prep_di" bpmnElement="Task_Prep">
+        <dc:Bounds x="4445" y="340" width="110" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_OK_di" bpmnElement="End_OK">
+        <dc:Bounds x="4622" y="482" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4590" y="521" width="100" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_Withdrawn_di" bpmnElement="End_Withdrawn">
+        <dc:Bounds x="4482" y="562" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4521" y="566" width="100" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_NotifyNoGuide_di" bpmnElement="Task_NotifyNoGuide">
+        <dc:Bounds x="4485" y="660" width="110" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_NoGuide_di" bpmnElement="End_NoGuide">
+        <dc:Bounds x="4662" y="682" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4630" y="721" width="100" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Boundary_NoGuide_di" bpmnElement="Boundary_NoGuide">
+        <dc:Bounds x="4342" y="682" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4381" y="686" width="100" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Boundary_Escalate_di" bpmnElement="Boundary_Escalate">
+        <dc:Bounds x="1902" y="1122" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1941" y="1126" width="100" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Boundary_Reminder_di" bpmnElement="Boundary_Reminder">
+        <dc:Bounds x="1842" y="1042" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1739" y="1046" width="100" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Boundary_ReviseTimer_di" bpmnElement="Boundary_ReviseTimer">
+        <dc:Bounds x="612" y="212" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="651" y="216" width="100" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Boundary_Deadline_di" bpmnElement="Boundary_Deadline">
+        <dc:Bounds x="472" y="192" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="511" y="196" width="100" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="F_01_di" bpmnElement="F_01">
+        <di:waypoint x="368" y="170" />
+        <di:waypoint x="435" y="170" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_02_di" bpmnElement="F_02">
+        <di:waypoint x="545" y="170" />
+        <di:waypoint x="560" y="170" />
+        <di:waypoint x="560" y="500" />
+        <di:waypoint x="575" y="500" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_03_di" bpmnElement="F_03">
+        <di:waypoint x="490" y="228" />
+        <di:waypoint x="490" y="360" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_04_di" bpmnElement="F_04">
+        <di:waypoint x="490" y="440" />
+        <di:waypoint x="490" y="475" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_05_di" bpmnElement="F_05">
+        <di:waypoint x="465" y="500" />
+        <di:waypoint x="368" y="500" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_06_di" bpmnElement="F_06">
+        <di:waypoint x="490" y="525" />
+        <di:waypoint x="490" y="582" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_07_di" bpmnElement="F_07">
+        <di:waypoint x="350" y="518" />
+        <di:waypoint x="350" y="560" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_08_di" bpmnElement="F_08">
+        <di:waypoint x="350" y="640" />
+        <di:waypoint x="350" y="682" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_09_di" bpmnElement="F_09">
+        <di:waypoint x="490" y="618" />
+        <di:waypoint x="490" y="760" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_10_di" bpmnElement="F_10">
+        <di:waypoint x="545" y="800" />
+        <di:waypoint x="605" y="800" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_11_di" bpmnElement="F_11">
+        <di:waypoint x="630" y="825" />
+        <di:waypoint x="630" y="860" />
+        <di:waypoint x="215" y="860" />
+        <di:waypoint x="215" y="112" />
+        <di:waypoint x="490" y="112" />
+        <di:waypoint x="490" y="130" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="219" y="472" width="110" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_12_di" bpmnElement="F_12">
+        <di:waypoint x="655" y="800" />
+        <di:waypoint x="752" y="800" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="648" y="771" width="110" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_13_di" bpmnElement="F_13">
+        <di:waypoint x="630" y="212" />
+        <di:waypoint x="630" y="168" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_14_di" bpmnElement="F_14">
+        <di:waypoint x="630" y="310" />
+        <di:waypoint x="630" y="460" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_15_di" bpmnElement="F_15">
+        <di:waypoint x="685" y="500" />
+        <di:waypoint x="745" y="500" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_16_di" bpmnElement="F_16">
+        <di:waypoint x="795" y="500" />
+        <di:waypoint x="885" y="500" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="785" y="471" width="110" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_17_di" bpmnElement="F_17">
+        <di:waypoint x="770" y="525" />
+        <di:waypoint x="770" y="560" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="774" y="529" width="110" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_18_di" bpmnElement="F_18">
+        <di:waypoint x="770" y="640" />
+        <di:waypoint x="770" y="682" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_19_di" bpmnElement="F_19">
+        <di:waypoint x="910" y="475" />
+        <di:waypoint x="910" y="440" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="796" y="444" width="110" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_20_di" bpmnElement="F_20">
+        <di:waypoint x="910" y="525" />
+        <di:waypoint x="910" y="760" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="796" y="629" width="110" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_21_di" bpmnElement="F_21">
+        <di:waypoint x="935" y="500" />
+        <di:waypoint x="1050" y="500" />
+        <di:waypoint x="1050" y="760" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1054" y="616" width="110" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_22_di" bpmnElement="F_22">
+        <di:waypoint x="855" y="400" />
+        <di:waypoint x="720" y="400" />
+        <di:waypoint x="720" y="270" />
+        <di:waypoint x="685" y="270" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_23_di" bpmnElement="F_23">
+        <di:waypoint x="910" y="840" />
+        <di:waypoint x="910" y="875" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_24_di" bpmnElement="F_24">
+        <di:waypoint x="935" y="900" />
+        <di:waypoint x="1050" y="900" />
+        <di:waypoint x="1050" y="840" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="937" y="871" width="110" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_25_di" bpmnElement="F_25">
+        <di:waypoint x="885" y="900" />
+        <di:waypoint x="788" y="900" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="781" y="871" width="110" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_26_di" bpmnElement="F_26">
+        <di:waypoint x="1105" y="800" />
+        <di:waypoint x="1190" y="800" />
+        <di:waypoint x="1190" y="740" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_27_di" bpmnElement="F_27">
+        <di:waypoint x="1245" y="700" />
+        <di:waypoint x="1305" y="700" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_28_di" bpmnElement="F_28">
+        <di:waypoint x="1330" y="725" />
+        <di:waypoint x="1330" y="760" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1334" y="729" width="110" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_29_di" bpmnElement="F_29">
+        <di:waypoint x="1355" y="700" />
+        <di:waypoint x="1400" y="700" />
+        <di:waypoint x="1400" y="1100" />
+        <di:waypoint x="1725" y="1100" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1404" y="886" width="110" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_30_di" bpmnElement="F_30">
+        <di:waypoint x="1385" y="800" />
+        <di:waypoint x="1445" y="800" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_31_di" bpmnElement="F_31">
+        <di:waypoint x="1470" y="775" />
+        <di:waypoint x="1470" y="270" />
+        <di:waypoint x="685" y="270" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1022" y="241" width="110" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_32_di" bpmnElement="F_32">
+        <di:waypoint x="1495" y="800" />
+        <di:waypoint x="1700" y="800" />
+        <di:waypoint x="1700" y="600" />
+        <di:waypoint x="2005" y="600" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1797" y="571" width="110" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_33_di" bpmnElement="F_33">
+        <di:waypoint x="1470" y="825" />
+        <di:waypoint x="1470" y="1100" />
+        <di:waypoint x="1725" y="1100" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1474" y="949" width="110" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_34_di" bpmnElement="F_34">
+        <di:waypoint x="1775" y="1100" />
+        <di:waypoint x="1835" y="1100" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_35_di" bpmnElement="F_35">
+        <di:waypoint x="1860" y="1042" />
+        <di:waypoint x="1860" y="540" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_36_di" bpmnElement="F_36">
+        <di:waypoint x="1915" y="500" />
+        <di:waypoint x="1982" y="500" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_37_di" bpmnElement="F_37">
+        <di:waypoint x="1920" y="1158" />
+        <di:waypoint x="1920" y="1182" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_38_di" bpmnElement="F_38">
+        <di:waypoint x="1938" y="1200" />
+        <di:waypoint x="2005" y="1200" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_39_di" bpmnElement="F_39">
+        <di:waypoint x="2060" y="1160" />
+        <di:waypoint x="2060" y="1125" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_40_di" bpmnElement="F_40">
+        <di:waypoint x="1945" y="1100" />
+        <di:waypoint x="2035" y="1100" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_41_di" bpmnElement="F_41">
+        <di:waypoint x="2085" y="1100" />
+        <di:waypoint x="2175" y="1100" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_42_di" bpmnElement="F_42">
+        <di:waypoint x="2225" y="1100" />
+        <di:waypoint x="2312" y="1100" />
+        <di:waypoint x="2312" y="500" />
+        <di:waypoint x="2400" y="500" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2316" y="786" width="110" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_43_di" bpmnElement="F_43">
+        <di:waypoint x="2200" y="1075" />
+        <di:waypoint x="2200" y="1000" />
+        <di:waypoint x="2060" y="1000" />
+        <di:waypoint x="2060" y="640" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2064" y="806" width="110" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_44_di" bpmnElement="F_44">
+        <di:waypoint x="2200" y="1125" />
+        <di:waypoint x="2200" y="1175" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2204" y="1136" width="110" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_45_di" bpmnElement="F_45">
+        <di:waypoint x="2225" y="1200" />
+        <di:waypoint x="2270" y="1200" />
+        <di:waypoint x="2270" y="400" />
+        <di:waypoint x="2055" y="400" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2274" y="786" width="110" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_46_di" bpmnElement="F_46">
+        <di:waypoint x="2200" y="1225" />
+        <di:waypoint x="2200" y="1270" />
+        <di:waypoint x="1750" y="1270" />
+        <di:waypoint x="1750" y="1125" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1920" y="1241" width="110" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_47_di" bpmnElement="F_47">
+        <di:waypoint x="1945" y="400" />
+        <di:waypoint x="1910" y="400" />
+        <di:waypoint x="1910" y="270" />
+        <di:waypoint x="685" y="270" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_48_di" bpmnElement="F_48">
+        <di:waypoint x="2115" y="600" />
+        <di:waypoint x="2175" y="600" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_49_di" bpmnElement="F_49">
+        <di:waypoint x="2200" y="575" />
+        <di:waypoint x="2200" y="270" />
+        <di:waypoint x="685" y="270" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1387" y="241" width="110" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_50_di" bpmnElement="F_50">
+        <di:waypoint x="2200" y="625" />
+        <di:waypoint x="2200" y="682" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2204" y="640" width="110" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_51_di" bpmnElement="F_51">
+        <di:waypoint x="4360" y="500" />
+        <di:waypoint x="4475" y="500" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_52_di" bpmnElement="F_52">
+        <di:waypoint x="4525" y="500" />
+        <di:waypoint x="4622" y="500" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4518" y="471" width="110" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_53_di" bpmnElement="F_53">
+        <di:waypoint x="4500" y="475" />
+        <di:waypoint x="4500" y="420" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4504" y="434" width="110" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_54_di" bpmnElement="F_54">
+        <di:waypoint x="4500" y="525" />
+        <di:waypoint x="4500" y="562" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4504" y="530" width="110" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_55_di" bpmnElement="F_55">
+        <di:waypoint x="4445" y="380" />
+        <di:waypoint x="2330" y="380" />
+        <di:waypoint x="2330" y="500" />
+        <di:waypoint x="2400" y="500" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_56_di" bpmnElement="F_56">
+        <di:waypoint x="4378" y="700" />
+        <di:waypoint x="4485" y="700" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F_57_di" bpmnElement="F_57">
+        <di:waypoint x="4595" y="700" />
+        <di:waypoint x="4662" y="700" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

@@ -1,0 +1,14 @@
+[
+  { "name": "Least loaded eligible guide is chosen",
+    "input":    { "proposalDomain": "machine-learning", "excludedGuides": [] },
+    "expected": { "status": "AVAILABLE", "guideId": "G-102" } },
+  { "name": "Declined guide is excluded, next one is chosen (F9)",
+    "input":    { "proposalDomain": "machine-learning", "excludedGuides": ["G-102"] },
+    "expected": { "status": "AVAILABLE", "guideId": "G-101" } },
+  { "name": "All matching guides excluded or at maximum load (F8)",
+    "input":    { "proposalDomain": "machine-learning", "excludedGuides": ["G-101", "G-102"] },
+    "expected": { "status": "NONE", "guideId": null } },
+  { "name": "No guide with the domain (F8)",
+    "input":    { "proposalDomain": "quantum-computing", "excludedGuides": [] },
+    "expected": { "status": "NONE", "guideId": null } }
+]

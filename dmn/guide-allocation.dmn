@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="https://www.omg.org/spec/DMN/20191111/MODEL/" xmlns:dmndi="https://www.omg.org/spec/DMN/20191111/DMNDI/" xmlns:dc="http://www.omg.org/spec/DMN/20180521/DC/" xmlns:di="http://www.omg.org/spec/DMN/20180521/DI/" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="guide_allocation" name="Guide allocation rules" namespace="http://camunda.org/schema/1.0/dmn" exporter="Camunda Modeler" exporterVersion="5.30.0" modeler:executionPlatform="Camunda Cloud" modeler:executionPlatformVersion="8.7.0">
+  <decision id="eligibleGuides" name="Eligible guides">
+    <variable id="eligibleGuides_var" name="eligibleGuides" />
+    <informationRequirement id="IR_1"><requiredInput href="#guides" /></informationRequirement>
+    <informationRequirement id="IR_2"><requiredInput href="#proposalDomain" /></informationRequirement>
+    <informationRequirement id="IR_3"><requiredInput href="#excludedGuides" /></informationRequirement>
+    <literalExpression id="LE_eligible">
+      <text>guides[item.domain = proposalDomain and item.load &lt; item.maxLoad and not(list contains(excludedGuides, item.id))]</text>
+    </literalExpression>
+  </decision>
+  <decision id="guideAvailability" name="Guide availability">
+    <variable id="guideAvailability_var" name="guideAvailability" typeRef="string" />
+    <informationRequirement id="IR_4"><requiredDecision href="#eligibleGuides" /></informationRequirement>
+    <decisionTable id="DT_availability" hitPolicy="UNIQUE">
+      <input id="DT_in" label="Number of eligible guides">
+        <inputExpression id="DT_in_expr" typeRef="number"><text>count(eligibleGuides)</text></inputExpression>
+      </input>
+      <output id="DT_out" label="Availability" name="guideAvailability" typeRef="string" />
+      <rule id="DT_r1"><inputEntry id="DT_r1_i"><text>0</text></inputEntry><outputEntry id="DT_r1_o"><text>"NONE"</text></outputEntry></rule>
+      <rule id="DT_r2"><inputEntry id="DT_r2_i"><text>&gt; 0</text></inputEntry><outputEntry id="DT_r2_o"><text>"AVAILABLE"</text></outputEntry></rule>
+    </decisionTable>
+  </decision>
+  <decision id="allocationResult" name="Allocation result">
+    <variable id="allocationResult_var" name="allocationResult" />
+    <informationRequirement id="IR_5"><requiredDecision href="#guideAvailability" /></informationRequirement>
+    <informationRequirement id="IR_6"><requiredDecision href="#eligibleGuides" /></informationRequirement>
+    <literalExpression id="LE_result">
+      <text>{ status: guideAvailability, guideId: if guideAvailability = "AVAILABLE" then sort(eligibleGuides, function(a, b) a.load &lt; b.load)[1].id else null }</text>
+    </literalExpression>
+  </decision>
+  <inputData id="guides" name="guides" />
+  <inputData id="proposalDomain" name="proposalDomain" />
+  <inputData id="excludedGuides" name="excludedGuides" />
+  <dmndi:DMNDI>
+    <dmndi:DMNDiagram id="DMNDiagram_1">
+      <dmndi:DMNShape id="s_guides" dmnElementRef="guides"><dc:Bounds height="45" width="125" x="160" y="340" /></dmndi:DMNShape>
+      <dmndi:DMNShape id="s_domain" dmnElementRef="proposalDomain"><dc:Bounds height="45" width="125" x="320" y="340" /></dmndi:DMNShape>
+      <dmndi:DMNShape id="s_excluded" dmnElementRef="excludedGuides"><dc:Bounds height="45" width="125" x="480" y="340" /></dmndi:DMNShape>
+      <dmndi:DMNShape id="s_eligible" dmnElementRef="eligibleGuides"><dc:Bounds height="80" width="180" x="300" y="200" /></dmndi:DMNShape>
+      <dmndi:DMNShape id="s_avail" dmnElementRef="guideAvailability"><dc:Bounds height="80" width="180" x="300" y="80" /></dmndi:DMNShape>
+      <dmndi:DMNShape id="s_result" dmnElementRef="allocationResult"><dc:Bounds height="80" width="180" x="560" y="140" /></dmndi:DMNShape>
+      <dmndi:DMNEdge id="e1" dmnElementRef="IR_1"><di:waypoint x="222" y="340" /><di:waypoint x="360" y="280" /></dmndi:DMNEdge>
+      <dmndi:DMNEdge id="e2" dmnElementRef="IR_2"><di:waypoint x="382" y="340" /><di:waypoint x="390" y="280" /></dmndi:DMNEdge>
+      <dmndi:DMNEdge id="e3" dmnElementRef="IR_3"><di:waypoint x="542" y="340" /><di:waypoint x="440" y="280" /></dmndi:DMNEdge>
+      <dmndi:DMNEdge id="e4" dmnElementRef="IR_4"><di:waypoint x="390" y="200" /><di:waypoint x="390" y="160" /></dmndi:DMNEdge>
+      <dmndi:DMNEdge id="e5" dmnElementRef="IR_5"><di:waypoint x="480" y="120" /><di:waypoint x="620" y="140" /></dmndi:DMNEdge>
+      <dmndi:DMNEdge id="e6" dmnElementRef="IR_6"><di:waypoint x="480" y="240" /><di:waypoint x="620" y="220" /></dmndi:DMNEdge>
+    </dmndi:DMNDiagram>
+  </dmndi:DMNDI>
+</definitions>

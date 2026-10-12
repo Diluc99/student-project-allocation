@@ -1,0 +1,54 @@
+{
+  "proposalId": "FYP-2026-0042",
+  "teamId": "TEAM-17",
+  "proposalDomain": "machine-learning",
+  "guides": [
+    {
+      "id": "G-101",
+      "name": "Dr. Rao",
+      "domain": "machine-learning",
+      "load": 3,
+      "maxLoad": 4
+    },
+    {
+      "id": "G-102",
+      "name": "Dr. Iyer",
+      "domain": "machine-learning",
+      "load": 1,
+      "maxLoad": 4
+    },
+    {
+      "id": "G-103",
+      "name": "Dr. Nair",
+      "domain": "machine-learning",
+      "load": 4,
+      "maxLoad": 4
+    },
+    {
+      "id": "G-104",
+      "name": "Dr. Menon",
+      "domain": "networks",
+      "load": 0,
+      "maxLoad": 4
+    }
+  ],
+  "proposalTitle": "Machine Learning Based Campus Energy Forecasting",
+  "abstract": "This project forecasts campus energy consumption using historical meter data and weather variables. The team will compare baseline regression models with tree-based models and evaluate forecast error on a held-out time period.",
+  "teamMembers": [
+    "SRM1001",
+    "SRM1002",
+    "SRM1003"
+  ],
+  "validationAttempts": 0,
+  "revisionCycles": 0,
+  "newTopicAllowance": 1,
+  "guideAttempts": 0,
+  "excludedGuides": [],
+  "similarityThreshold": 0.4,
+  "similarityScore": 0.1,
+  "formValid": true,
+  "teamValid": true,
+  "decision": "approved",
+  "simDecision": "cleared",
+  "guideResponse": "accept"
+}
